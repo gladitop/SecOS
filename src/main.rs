@@ -1,18 +1,25 @@
-fn main() {
-    // read env variables that were set in build script
-    let uefi_path = env!("UEFI_PATH");
-    let bios_path = env!("BIOS_PATH");
-    
-    // choose whether to start the UEFI or BIOS image
-    let uefi = true;
+#![no_std]
+#![no_main]
 
-    let mut cmd = std::process::Command::new("qemu-system-x86_64");
-    if uefi {
-        cmd.arg("-bios").arg(ovmf_prebuilt::ovmf_pure_efi());
-        cmd.arg("-drive").arg(format!("format=raw,file={uefi_path}"));
-    } else {
-        cmd.arg("-drive").arg(format!("format=raw,file={bios_path}"));
+pub mod gpu;
+
+use gpu::vga::VGA;
+use core::panic::PanicInfo;
+
+/// This function is called on kernel panic
+#[panic_handler]
+fn panic(_info: &PanicInfo) -> ! {
+    loop {}
+}
+
+#[no_mangle]
+pub extern "C" fn _start() -> ! {
+    let mut vga = VGA::init();
+    vga.println(b"Welcom to SecOS \n WARNING: THIS IS ONLY A PROTOTYPE");
+    //vga.println(b"WWWW");
+
+
+    loop {
+        
     }
-    let mut child = cmd.spawn()?;
-    child.wait()?;
 }
