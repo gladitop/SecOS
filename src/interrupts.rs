@@ -1,5 +1,6 @@
-use crate::{gdt, print, println};
+use crate::{gdt, print, println, gpu::vga::{self, BUFFER_HEIGHT, BUFFER_WIDTH}};
 use lazy_static::lazy_static;
+use pc_keyboard::KeyCode;
 use pic8259::ChainedPics;
 use spin;
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
@@ -84,7 +85,27 @@ extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: InterruptStac
         if let Some(key) = keyboard.process_keyevent(key_event) {
             match key {
                 DecodedKey::Unicode(character) => print!("{}", character),
-                DecodedKey::RawKey(key) => print!("{:?}", key),
+                DecodedKey::RawKey(key) if key == KeyCode::Enter => {
+                    print!("SSSS");
+                    // Read command
+                    let writer = vga::WRITER.lock();
+                    let mut command = [0u8; BUFFER_WIDTH];
+
+                    //writer.buffer[ВЫСОТА][ШИРИНА];
+                    let read = writer.buffer.chars[BUFFER_HEIGHT - 1][BUFFER_WIDTH - 1].clone();
+
+                    for i in 0..BUFFER_WIDTH {
+                        let char = writer.buffer.chars[BUFFER_HEIGHT - 2][i].read().ascii_character;
+
+                        if char != 0x0 {
+                            command[i] = char;
+                        }
+
+                        println!("{}", char);
+                    }
+
+                },
+                DecodedKey::RawKey(_) => {print!("SSSS111")},
             }
         }
     }

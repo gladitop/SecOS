@@ -6,6 +6,7 @@ pub mod gdt;
 pub mod gpu;
 pub mod interrupts;
 
+use gpu::vga::Color;
 use core::panic::PanicInfo;
 
 /// This function is called on kernel panic
@@ -28,7 +29,9 @@ pub fn init() {
 pub extern "C" fn _start() -> ! {
     {
         let mut writer = gpu::vga::WRITER.lock();
-        writer.set_background();
+        writer.set_background(Color::Red);
+        //println!("HELL");
+        //println!("{:?}", writer.buffer.chars[0][0]);
     }
 
     println!("Loading kernel service...");
@@ -39,6 +42,15 @@ pub extern "C" fn _start() -> ! {
     println!("It's a prototype!");
     println!("Version: 0.1");
     println!("Author: Almaev Damir Maratovich");
+    println!("Command mode active!");
 
-    loop {}
+    {
+        //let mut writer = gpu::vga::WRITER.lock();
+        //println!("{:?}", writer.buffer.chars[1][1].read().ascii_character);
+    }
+
+
+    loop {
+        //println!(">")
+    }
 }

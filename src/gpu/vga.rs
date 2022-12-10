@@ -54,20 +54,20 @@ impl ColorCode {
 /// A screen character in the VGA text buffer, consisting of an ASCII character and a `ColorCode`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
-struct ScreenChar {
-    ascii_character: u8,
+pub struct ScreenChar {
+    pub ascii_character: u8,
     color_code: ColorCode,
 }
 
 /// The height of the text buffer (normally 25 lines).
-const BUFFER_HEIGHT: usize = 25;
+pub const BUFFER_HEIGHT: usize = 25;
 /// The width of the text buffer (normally 80 columns).
-const BUFFER_WIDTH: usize = 80;
+pub const BUFFER_WIDTH: usize = 80;
 
 /// A structure representing the VGA text buffer.
 #[repr(transparent)]
-struct Buffer {
-    chars: [[Volatile<ScreenChar>; BUFFER_WIDTH]; BUFFER_HEIGHT],
+pub struct Buffer {
+    pub chars: [[Volatile<ScreenChar>; BUFFER_WIDTH]; BUFFER_HEIGHT],
 }
 
 /// A writer type that allows writing ASCII bytes and strings to an underlying `Buffer`.
@@ -77,7 +77,7 @@ struct Buffer {
 pub struct Writer {
     column_position: usize,
     color_code: ColorCode,
-    buffer: &'static mut Buffer,
+    pub buffer: &'static mut Buffer,
 }
 
 impl Writer {
@@ -106,12 +106,12 @@ impl Writer {
         }
     }
 
-    pub fn set_background(&mut self) {
+    pub fn set_background(&mut self, color: Color) {
         for row in 0..BUFFER_HEIGHT {
             for col in 0..BUFFER_WIDTH {
                 self.buffer.chars[row][col].write(ScreenChar {
                     ascii_character: 0x0,
-                    color_code: ColorCode::new(Color::White, Color::Red),
+                    color_code: ColorCode::new(color, color),
                 });
             }
         }
