@@ -110,7 +110,7 @@ impl Writer {
         for row in 0..BUFFER_HEIGHT {
             for col in 0..BUFFER_WIDTH {
                 self.buffer.chars[row][col].write(ScreenChar {
-                    ascii_character: 0x0,
+                    ascii_character: b' ',
                     color_code: ColorCode::new(color, color),
                 });
             }

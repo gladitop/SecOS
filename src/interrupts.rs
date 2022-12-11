@@ -1,8 +1,7 @@
-use crate::{gdt, print, println, gpu::vga::{self, BUFFER_HEIGHT, BUFFER_WIDTH}};
+use crate::{gdt, print, println, gpu::vga::{BUFFER_HEIGHT, self, Color}};
 use lazy_static::lazy_static;
-use pc_keyboard::KeyCode;
 use pic8259::ChainedPics;
-use spin;
+use spin::{self, Mutex};
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
 
 pub const PIC_1_OFFSET: u8 = 32;
@@ -41,6 +40,8 @@ lazy_static! {
         idt[InterruptIndex::Keyboard.as_usize()].set_handler_fn(keyboard_interrupt_handler);
         idt
     };
+
+    static ref COMMAND_BUFFER: Mutex<[u8; BUFFER_HEIGHT]> =Mutex::new([0u8; BUFFER_HEIGHT]);
 }
 
 pub fn init_idt() {
@@ -84,28 +85,34 @@ extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: InterruptStac
     if let Ok(Some(key_event)) = keyboard.add_byte(scancode) {
         if let Some(key) = keyboard.process_keyevent(key_event) {
             match key {
-                DecodedKey::Unicode(character) => print!("{}", character),
-                DecodedKey::RawKey(key) if key == KeyCode::Enter => {
-                    print!("SSSS");
-                    // Read command
-                    let writer = vga::WRITER.lock();
-                    let mut command = [0u8; BUFFER_WIDTH];
-
-                    //writer.buffer[ВЫСОТА][ШИРИНА];
-                    let read = writer.buffer.chars[BUFFER_HEIGHT - 1][BUFFER_WIDTH - 1].clone();
-
-                    for i in 0..BUFFER_WIDTH {
-                        let char = writer.buffer.chars[BUFFER_HEIGHT - 2][i].read().ascii_character;
-
-                        if char != 0x0 {
-                            command[i] = char;
+                DecodedKey::Unicode(character) if character == '\n' => {
+                    println!("");
+                    let command = COMMAND_BUFFER.lock()[0];
+                    
+                    match command
+                    {
+                        b'h' => {
+                            println!("help about os!");
+                            println!("a - info about os");
+                            println!("c - clear console")
+                        },
+                        b'a' => {
+                            println!("VERSION: 1.0");
+                            println!("MADE BY GLADI");
                         }
-
-                        println!("{}", char);
+                        b'c' => {
+                            vga::WRITER.lock().set_background(Color::Red)
+                        }
+                        _ => {}
                     }
+                    COMMAND_BUFFER.lock()[0] = b' ';
 
                 },
-                DecodedKey::RawKey(_) => {print!("SSSS111")},
+                DecodedKey::Unicode(character) => {
+                    COMMAND_BUFFER.lock()[0] = character as u8;
+                    print!("{}", character);
+                },
+                _ => {},
             }
         }
     }

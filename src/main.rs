@@ -35,7 +35,7 @@ pub extern "C" fn _start() -> ! {
     }
 
     println!("Loading kernel service...");
-    init();
+    
 
     println!("Kernel done!");
     println!("Welcome to OC");
@@ -43,6 +43,7 @@ pub extern "C" fn _start() -> ! {
     println!("Version: 0.1");
     println!("Author: Almaev Damir Maratovich");
     println!("Command mode active!");
+    init();
 
     {
         //let mut writer = gpu::vga::WRITER.lock();
